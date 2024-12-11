@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
 const ClassSchedulesSchema = new mongoose.Schema({
-    class: { type: Schema.Types.ObjectId, ref: 'class', required: true },
-    trainer: { type: Schema.Types.ObjectId, ref: 'user', required: true },
+    class: { type: mongoose.Schema.Types.ObjectId, ref: 'class', required: true },
+    trainer: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
     date: { type: Date, required: true },
     startTime: { type: String, required: true }, // Example: "10:00 AM"
     endTime: { type: String, required: true },   // Example: "12:00 PM"
-    trainees: [{ type: Schema.Types.ObjectId, ref: 'user' }], // Array of trainees
+    trainees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }], // Array of trainees
 },
 {timestamps: true, versionKey: false, validateBeforeSave: true,}
 );
