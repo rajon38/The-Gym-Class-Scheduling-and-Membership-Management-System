@@ -10,7 +10,7 @@ router.post('/register', register);//register
 router.post('/login', login);//login
 router.get('/allUsers', getUsers);//get All Users with params - role 'Trainer' or 'Trainee'
 router.get('/user/:id', authVarify, getUserById);//get a User
-router.get('/profile', authVarify, restrict(['Admin', 'Trainee', 'Trainer']), getProfile);//get Profile
+router.get('/profile', authVarify, getProfile);//get Profile
 router.put('/profile', authVarify, restrict(['Admin', 'Trainee']), updateProfile)//update Profile
 router.post('/trainers', authVarify, restrict(['Admin']), createTrainer);//create a Trainer
 router.put('/trainers/:id', authVarify, restrict(['Admin']), updateTrainer);//update Trainer

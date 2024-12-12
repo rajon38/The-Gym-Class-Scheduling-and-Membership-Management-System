@@ -1,5 +1,6 @@
 const Class = require('../models/ClassesSchema');
 const ClassSchedule = require('../models/ClassSchedulesSchema');
+const Booking = require('../models/BookingsSchema')
 const User = require('../models/UsersSchema');
 
 //createClass
@@ -230,7 +231,7 @@ exports.bookClass = async (req, res) => {
         const { classScheduleId } = req.body;
         const { id: traineeId } = req.headers;
 
-        // Check if the class schedule exists and has capacity
+        // Fetch the class schedule
         const schedule = await ClassSchedule.findById(classScheduleId);
         if (!schedule) {
             return res.status(404).json({
@@ -239,6 +240,7 @@ exports.bookClass = async (req, res) => {
             });
         }
 
+        // Check if the class is fully booked
         if (schedule.trainees.length >= 10) {
             return res.status(400).json({
                 success: false,
@@ -246,22 +248,30 @@ exports.bookClass = async (req, res) => {
             });
         }
 
-        // Check if the trainee is already booked in this schedule
-        if (schedule.trainees.includes(traineeId)) {
+        // Check if the trainee is already booked
+        const existingBooking = await Booking.findOne({ schedule: classScheduleId, trainee: traineeId });
+        if (existingBooking) {
             return res.status(400).json({
                 success: false,
                 message: 'Trainee is already booked for this class.',
             });
         }
 
-        // Add the trainee to the schedule
+        // Create a new booking entry
+        const newBooking = new Booking({ schedule: classScheduleId, trainee: traineeId });
+        await newBooking.save();
+
+        // Add the trainee to the schedule for quick reference
         schedule.trainees.push(traineeId);
         await schedule.save();
 
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             message: 'Class booked successfully.',
-            data: schedule,
+            data: {
+                booking: newBooking,
+                schedule,
+            },
         });
     } catch (error) {
         console.error('Error in bookClass:', error);
@@ -272,6 +282,7 @@ exports.bookClass = async (req, res) => {
         });
     }
 };
+
 
 
 //getTraineeBookings
