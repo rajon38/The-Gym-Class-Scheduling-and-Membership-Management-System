@@ -290,14 +290,27 @@ exports.getTraineeBookings = async (req, res) => {
     try {
         const { id: traineeId } = req.headers;
 
-        const bookings = await ClassSchedule.find({ trainees: traineeId })
-            .populate('class', 'name description')
-            .populate('trainer', 'fullName email')
-            .select('-trainees');
+        // Find all bookings for the trainee
+        const bookings = await Booking.find({ trainee: traineeId })
+            .populate({
+                path: 'schedule',
+                populate: {
+                    path: 'class trainer',
+                    select: 'name fullName email',
+                },
+            })
+            .exec();
+
+        if (!bookings.length) {
+            return res.status(404).json({
+                success: false,
+                message: 'No bookings found for the trainee.',
+            });
+        }
 
         res.status(200).json({
             success: true,
-            message: 'Trainee bookings retrieved successfully.',
+            message: 'Bookings retrieved successfully.',
             data: bookings,
         });
     } catch (error) {
@@ -314,44 +327,41 @@ exports.getTraineeBookings = async (req, res) => {
 //cancelBooking
 exports.cancelBooking = async (req, res) => {
     try {
-        const { classScheduleId, traineeId: bodyTraineeId } = req.body;
-        const { id: headerTraineeId, role } = req.headers;
+        const { bookingId } = req.body;
+        const { id: requesterId, role } = req.headers;
 
-        let traineeId = bodyTraineeId || headerTraineeId;
-
-        // If the request is made by Admin, ensure a traineeId is provided in the request body
-        if (role === 'Admin' && !traineeId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Trainee ID is required for Admin to cancel a booking.',
-            });
-        }
-
-        // Find the class schedule
-        const schedule = await ClassSchedule.findById(classScheduleId);
-        if (!schedule) {
+        // Fetch the booking record
+        const booking = await Booking.findById(bookingId).populate('schedule').exec();
+        if (!booking) {
             return res.status(404).json({
                 success: false,
-                message: 'Class schedule not found.',
+                message: 'Booking not found.',
             });
         }
 
-        // Check if the trainee is booked
-        const traineeIndex = schedule.trainees.indexOf(traineeId);
-        if (traineeIndex === -1) {
-            return res.status(400).json({
+        const { schedule, trainee } = booking;
+
+        // Check authorization (Trainee can cancel their booking, Admin can cancel any booking)
+        if (role !== 'Admin' && String(trainee) !== String(requesterId)) {
+            return res.status(403).json({
                 success: false,
-                message: 'Trainee is not booked for this class.',
+                message: 'You are not authorized to cancel this booking.',
             });
         }
 
-        // Remove the trainee from the schedule
-        schedule.trainees.splice(traineeIndex, 1);
-        await schedule.save();
+        // Remove the trainee from the schedule's trainees array
+        const traineeIndex = schedule.trainees.indexOf(trainee);
+        if (traineeIndex !== -1) {
+            schedule.trainees.splice(traineeIndex, 1);
+            await schedule.save();
+        }
+
+        // Delete the booking record
+        await booking.remove();
 
         res.status(200).json({
             success: true,
-            message: `Booking cancelled successfully${role === 'Admin' ? ' by Admin' : ''}.`
+            message: 'Booking cancelled successfully.',
         });
     } catch (error) {
         console.error('Error in cancelBooking:', error);
@@ -362,3 +372,4 @@ exports.cancelBooking = async (req, res) => {
         });
     }
 };
+
