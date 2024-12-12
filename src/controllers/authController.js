@@ -54,68 +54,21 @@ const createUser = async (userDetails, res) => {
     }
   };
 
-// Controller for creating a trainer
+//creating a trainer
 exports.createTrainer = (req, res) => {
   const { fullName, email, password } = req.body;
   createUser({ fullName, email, password, role: 'Trainer' }, res);
 };
 
-// Controller for registering a trainee
+//registering a trainee
 exports.register = (req, res) => {
   const { fullName, email, password } = req.body;
   createUser({ fullName, email, password, role: 'Trainee' }, res);
 };
-// exports.register =async(req, res)=>{
-//     const { fullName, email, password } = req.body;
 
-//     try {
-//         const existingUser = await User.findOne({email})
 
-//         if(existingUser){
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Validation error occurred.',
-//                 errorDetails: {
-//                   field: 'email',
-//                   message: 'Email already registered.'}
-//                 })
-//         }
 
-//         // Hash the password
-//         const hashedPassword = await hashPass(password);
-
-//         //create a new trainee
-//         const newTrainee = new User({
-//             fullName,
-//             email,
-//             password: hashedPassword,
-//             role: 'Trainee'
-//         });
-
-//         // Save the trainee to the database
-//         await newTrainee.save();
-
-//         res.status(201).json({
-//             success: true,
-//             message: 'Trainee registered successfully.',
-//             data: {
-//                 id: newTrainee._id,
-//                 fullName: newTrainee.fullName,
-//                 email: newTrainee.email,
-//                 role: newTrainee.role
-//             }
-//         });
-
-//     } catch (error) {
-//         console.error('Error in registerTrainee:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Server error occurred.',
-//             errorDetails: error.message,
-//         });
-//     }
-// }
-
+//login
 exports.login = async(req, res) =>{
     const { email, password } = req.body;
 
@@ -169,6 +122,8 @@ exports.login = async(req, res) =>{
     }
 }
 
+
+//getUsers
 exports.getUsers = async (req, res) => {
     try {
       const { role } = req.query;
@@ -193,6 +148,7 @@ exports.getUsers = async (req, res) => {
   };
 
 
+//getUserById
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -205,8 +161,6 @@ exports.getUserById = async (req, res) => {
         message: 'User not found',
       });
     }
-
-
     // Respond with the user details
     res.status(200).json({
       success: true,
@@ -223,13 +177,12 @@ exports.getUserById = async (req, res) => {
   }
 }
   
-
+//deleteUser
 exports.deleteUser = async (req, res) => {
     try {
       const { id } = req.params;
       const { role } = req.query;
 
-      
       // Validate ID format
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
@@ -249,7 +202,6 @@ exports.deleteUser = async (req, res) => {
       // Find the user by ID
     const user = await User.findById(id);
     
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -282,6 +234,7 @@ exports.deleteUser = async (req, res) => {
     }
 };
  
+//updateTrainer
 exports.updateTrainer = async (req, res) => {
   try {
     const { id } = req.params;
@@ -320,6 +273,7 @@ exports.updateTrainer = async (req, res) => {
 };
 
 
+//getProfile
 exports.getProfile = async (req, res) => {
   try {
     const { id } = req.headers; 
@@ -349,6 +303,7 @@ exports.getProfile = async (req, res) => {
 };
 
 
+//updateProfile
 exports.updateProfile = async (req, res) => {
   try {
     const { id } = req.headers;
