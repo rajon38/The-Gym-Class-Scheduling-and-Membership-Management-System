@@ -298,7 +298,7 @@ exports.getTraineeBookings = async (req, res) => {
                     path: 'class trainer',
                     select: 'name fullName email',
                 },
-            })
+            }).select('-trainee')
             .exec();
 
         if (!bookings.length) {
@@ -357,7 +357,7 @@ exports.cancelBooking = async (req, res) => {
         }
 
         // Delete the booking record
-        await booking.remove();
+        await Booking.findByIdAndDelete(bookingId);
 
         res.status(200).json({
             success: true,
